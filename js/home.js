@@ -65,12 +65,61 @@ function renderPostList(postList) {
   });
 }
 
+function handleFilterChange(filterName, filterValue) {
+  // update query params
+  const url = new URL(window.location);
+  url.searchParams.set(filterName, filterValue);
+  history.pushState({}, '', url);
+
+  // fetch API
+  // re-render post list
+}
+
+function handlePrevClick(e) {
+  e.preventDefault();
+  console.log('prev click');
+}
+
+function handleNextClick(e) {
+  e.preventDefault();
+  console.log('next click');
+}
+
+function initPagination() {
+  // bind click event for prev/next links
+  const ulPaginationElement = document.getElementById('postsPagination');
+  if (!ulPaginationElement) return;
+
+  // prev click event
+  const prevElement = ulPaginationElement.firstElementChild?.firstElementChild;
+  if (prevElement) prevElement.addEventListener('click', handlePrevClick);
+
+  // next click event
+  const nextElement = ulPaginationElement.lastElementChild?.lastElementChild;
+  if (nextElement) nextElement.addEventListener('click', handleNextClick);
+}
+
+function initUrl() {
+  const url = new URL(window.location);
+
+  // update search params if needed
+  if (!url.searchParams.get('_page')) url.searchParams.set('_page', 1);
+  if (!url.searchParams.get('_limit')) url.searchParams.set('_limit', 6);
+
+  history.pushState({}, '', url);
+}
+
 (async () => {
   try {
-    const queryParams = {
-      _page: 1,
-      _limit: 6,
-    }
+    initPagination();
+    initUrl();
+
+    const queryParams = new URLSearchParams(window.location.search);
+
+    // const queryParams = {
+    //   _page: 1,
+    //   _limit: 6,
+    // }
     const {data, pagination} = await postApi.getAll(queryParams);
     renderPostList(data);
   } catch (error) {
