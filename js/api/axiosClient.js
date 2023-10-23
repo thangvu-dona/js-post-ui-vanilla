@@ -32,6 +32,20 @@ axiosClient.interceptors.response.use(function (response) {
 }, function (error) {
   // Any status codes that falls outside the range of 2xx cause this function to trigger
   // Do something with response error
+  console.log('axioClient - response error for all res ' , error.response);
+
+  if (!error.response) throw new Error('Network error. Plese try again!');
+
+  // redirect to login if not login
+  if (error.response.status === 401) {
+    // clear token, logout
+    // ...
+    // handle for reponses return error 404
+
+    window.location.assign('/login.html');
+    return
+  }
+
   return Promise.reject(error);
 });
 
