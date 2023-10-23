@@ -1,5 +1,5 @@
 import postApi from "./api/postApi";
-import {setTextContent, truncateText} from "./utils";
+import {getUlPaginationElement, setTextContent, truncateText} from "./utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -65,29 +65,55 @@ function renderPostList(postList) {
   });
 }
 
-function handleFilterChange(filterName, filterValue) {
-  // update query params
+async function handleFilterChange(filterName, filterValue) {
+  try {
+    // update query params
   const url = new URL(window.location);
   url.searchParams.set(filterName, filterValue);
   history.pushState({}, '', url);
 
   // fetch API
+  const queryParams = new URLSearchParams(window.location.search);
+  const {data, pagination} = await postApi.getAll(queryParams);
+
   // re-render post list
+  renderPostList(data);
+  renderPagination(pagination);
+  } catch (error) {
+    console.log('failed to fetch post list', error);
+  }
 }
 
 function handlePrevClick(e) {
   e.preventDefault();
   console.log('prev click');
+
+  const ulPaginationElement = getUlPaginationElement();
+  if (!ulPaginationElement) return;
+
+  const page = Number.parseInt(ulPaginationElement.dataset.page) || 1;
+  if (page <= 1) return;
+  
+  handleFilterChange('_page', page - 1);
 }
 
 function handleNextClick(e) {
   e.preventDefault();
   console.log('next click');
+
+  const ulPaginationElement = getUlPaginationElement();
+  if (!ulPaginationElement) return;
+
+  const page = Number.parseInt(ulPaginationElement.dataset.page) || 1;
+  const totalPages = ulPaginationElement.dataset.totalPages;
+  if (page >= totalPages) return;
+  
+  handleFilterChange('_page', page + 1);
 }
 
 function initPagination() {
   // bind click event for prev/next links
-  const ulPaginationElement = document.getElementById('postsPagination');
+  const ulPaginationElement = getUlPaginationElement();
   if (!ulPaginationElement) return;
 
   // prev click event
@@ -109,19 +135,39 @@ function initUrl() {
   history.pushState({}, '', url);
 }
 
+function renderPagination(pagination) {
+  const ulPagination = getUlPaginationElement();
+  if (!ulPagination || !pagination) return
+
+  // calculate totalPages
+  const {_page, _limit, _totalRows} = pagination;
+  const totalPages = Math.ceil(_totalRows / _limit);
+
+  // save page and totalPages to ulPagination
+  ulPagination.dataset.page = _page;
+  ulPagination.dataset.totalPages = totalPages;
+
+  //check if enable/disable prev link
+  if (_page <= 1) ulPagination.firstElementChild?.classList.add('disabled');
+  else ulPagination.firstElementChild?.classList.remove('disabled');
+  //check if enable/disable next link
+  if (_page >= totalPages) ulPagination.lastElementChild?.classList.add('disabled');
+  else ulPagination.lastElementChild?.classList.remove('disabled');
+}
+
 (async () => {
   try {
+    // attach click event for links
     initPagination();
+
+    // set default pagination(_page, _limit) on URL
     initUrl();
 
+    // render post list base on URL params
     const queryParams = new URLSearchParams(window.location.search);
-
-    // const queryParams = {
-    //   _page: 1,
-    //   _limit: 6,
-    // }
     const {data, pagination} = await postApi.getAll(queryParams);
     renderPostList(data);
+    renderPagination(pagination);
   } catch (error) {
     console.log('Error for each request ' , error);
     // show modal, toast errors
