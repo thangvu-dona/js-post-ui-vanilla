@@ -68,17 +68,17 @@ function renderPostList(postList) {
 async function handleFilterChange(filterName, filterValue) {
   try {
     // update query params
-  const url = new URL(window.location);
-  url.searchParams.set(filterName, filterValue);
-  history.pushState({}, '', url);
+    const url = new URL(window.location);
+    url.searchParams.set(filterName, filterValue);
+    history.pushState({}, '', url);
 
-  // fetch API
-  const queryParams = new URLSearchParams(window.location.search);
-  const {data, pagination} = await postApi.getAll(queryParams);
+    // fetch API
+    const queryParams = new URLSearchParams(window.location.search);
+    const {data, pagination} = await postApi.getAll(queryParams);
 
-  // re-render post list
-  renderPostList(data);
-  renderPagination(pagination);
+    // re-render post list
+    renderPostList(data);
+    renderPagination(pagination);
   } catch (error) {
     console.log('failed to fetch post list', error);
   }
