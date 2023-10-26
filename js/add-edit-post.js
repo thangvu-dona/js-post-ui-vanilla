@@ -1,4 +1,5 @@
 import postApi from "./api/postApi";
+import { initPostForm } from "./utils";
 
 // MAIN
 (async () => {
@@ -14,6 +15,12 @@ import postApi from "./api/postApi";
         author: '',
         imageUrl: '',
       };
+
+    initPostForm({
+      formId: 'postForm',
+      defaultValues,
+      onSubmit: (formValues) => {console.log('submit: ', formValues);},
+    });
   } catch (error) {
     console.log('Failed to fetch post from id', error);
   }
