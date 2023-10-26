@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import postApi from "./api/postApi";
-import { setTextContent } from "./utils";
+import { registerLightbox, setTextContent } from "./utils";
 
 function renderPostDetail(post) {
   setTextContent(document, '#postDetailTitle', post.title);
@@ -28,6 +28,13 @@ function renderPostDetail(post) {
 }
 
 (async () => {
+  registerLightbox({
+    modalId: 'lightboxModal',
+    imgSelector: 'img[data-id="lightboxImg"]',
+    prevSelector: 'button[data-id="lightboxPrev"]',
+    nextSelector: 'button[data-id="lightboxNext"]',
+  });
+
   try {
     // get post id from URL
     // fetch post detail API
