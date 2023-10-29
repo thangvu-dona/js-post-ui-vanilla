@@ -1,11 +1,11 @@
 import postApi from "./api/postApi";
-import { initPagination, initSearch, renderPostList, renderPagination } from "./utils";
+import { initPagination, initSearch, renderPostList, renderPagination, toast } from "./utils";
 
 async function handleFilterChange(filterName, filterValue) {
   try {
     // update query params
     const url = new URL(window.location);
-    url.searchParams.set(filterName, filterValue);
+    if (filterName) url.searchParams.set(filterName, filterValue);
 
     // reset page when param has 'title_like'
     if (filterName === 'title_like') url.searchParams.set('_page', 1);
@@ -22,6 +22,27 @@ async function handleFilterChange(filterName, filterValue) {
   } catch (error) {
     console.log('failed to fetch post list', error);
   }
+}
+
+function registerPostDeleteEvent() {
+  document.addEventListener('post-delete', async (event) => {
+    try {
+      console.log('remove post click', event.detail);
+      // call API for remove post by id
+      const post = event.detail;
+      const message = `Are you sure to remove post "${post.title}"?`;
+      if (window.confirm(message)) {
+        await postApi.remove(post.id);
+        // refetch data
+        await handleFilterChange(); // no-parameters
+
+        toast.success('Remove post successfully!');
+      }
+    } catch (error) {
+      console.log('Fail to remove post', error);
+      toast.error(error.message);
+    }
+  });
 }
 
 (async () => {
@@ -47,10 +68,12 @@ async function handleFilterChange(filterName, filterValue) {
       onChange: value => handleFilterChange('title_like', value)
     });
 
+    registerPostDeleteEvent();
     // render post list base on URL params
-    const {data, pagination} = await postApi.getAll(queryParams);
-    renderPostList('postList', data);
-    renderPagination('postsPagination', pagination);
+    // const {data, pagination} = await postApi.getAll(queryParams);
+    // renderPostList('postList', data);
+    // renderPagination('postsPagination', pagination);
+    handleFilterChange(); // this statement can replace 3 code lines above
   } catch (error) {
     console.log('Error for each request ' , error);
     // show modal, toast errors
