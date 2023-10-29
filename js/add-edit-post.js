@@ -14,30 +14,41 @@ function removeUnusedField(formValues) {
   // finally remove imageSource
   delete payload.imageSource;
 
+  // remove id if it's add mode
+  if (!payload.id) delete payload.id
+
   return payload;
 }
 
-async function handlePostFormSubmit(formValues) {
-  const payload = removeUnusedField(formValues);
-  console.log('submit from parent', {formValues, payload});
-  return;
+function jsonToFormData(jsonObject) {
+  const formData = new FormData();
 
+  for(const key in jsonObject) {
+    formData.set(key, jsonObject[key]);
+  }
+
+  return formData;
+}
+
+async function handlePostFormSubmit(formValues) {
   try {
     // throw new Error('Error from testing');
+    const payload = removeUnusedField(formValues);
+    const formData = jsonToFormData(payload);
 
     // check add/edit mode
     // S1: based on search params(check id)
     // S2: check id in formValues
     // call API
-    const savedPost = formValues.id ? await postApi.update(formValues) : await postApi.add(formValues);
+    const savedPost = formValues.id ? await postApi.updateFormData(formData) : await postApi.addFormData(formData);
 
     // show success message
     toast.success('Save post successfully!')
 
     // redirect to detail page
-    setTimeout(() => {
-      window.location.assign(`/post-detail.html?id=${savedPost.id}`);
-    }, 2000);
+    // setTimeout(() => {
+    //   window.location.assign(`/post-detail.html?id=${savedPost.id}`);
+    // }, 2000);
   } catch (error) {
     console.log('failed to save post', error);
     toast.error(`Error: ${error.message}`);
